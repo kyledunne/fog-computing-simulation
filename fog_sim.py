@@ -9,17 +9,17 @@ def main():
     sim_input = SimulationInput(num_fog_nodes=10,
                                 num_tasks=1500,
                                 iot_to_fog_delay=10,
-                                cloud_to_iot_delay=100,
-                                fog_to_cloud_delay=95,
+                                cloud_to_iot_delay=50,
+                                fog_to_cloud_delay=40,
                                 intra_fog_delay=4,
-                                threshold=200,
+                                threshold=100,
                                 fog_processing_speed=1,
-                                cloud_processing_speed=2,
+                                cloud_processing_speed=1,
                                 avg_task_size=10,  # time taken to process a task (in ms): task_size * processing_speed
                                 stdev_task_size=3,
-                                avg_tasks_created_per_tick=5,
-                                stdev_tasks_created_per_tick=2,
-                                avg_deadline_margin=200,
+                                avg_tasks_created_per_tick=-5,
+                                stdev_tasks_created_per_tick=3,
+                                avg_deadline_margin=100,
                                 stdev_deadline_margin=50,
                                 offloading_max_jumps=5)
     networkOffloading = NetworkFogOffloading(sim_input.num_fog_nodes, sim_input.offloading_max_jumps)
@@ -190,6 +190,8 @@ class Network1CommandNodeFIFO(Network):
                     if diff > choice_queue_space:
                         choice_index = exec_node
                         choice_queue_space = diff
+            #choice_index is remaining at -1 when it shouldn't
+            # the waiting time at the exec_nodes is not going down?
             if choice_index == -1:
                 simulation.evlist.put_nowait(Event(time=event.time + simulation.sim_input.fog_to_cloud_delay,
                                                    event_type='arrival_at_cloud', data=event.data))
@@ -207,6 +209,7 @@ class Network1CommandNodeFIFO(Network):
                     simulation.evlist.put_nowait(Event(time=event.time + event.data[1].size * simulation.sim_input.fog_processing_speed,
                                                        event_type='execution_completed_fog', data=event.data))
                     self.is_processing[event.data[0]] = True
+                    self.waiting_times[event.data[0]] -= event.data[1].size * simulation.sim_input.fog_processing_speed
                 else:
                     #add this task to this node's queue
                     self.exec_node_queues[event.data[0]].put_nowait(event.data[1])
@@ -281,6 +284,7 @@ class Network1CommandNodeEDD(Network):
                     simulation.evlist.put_nowait(Event(time=event.time + event.data[1].size * simulation.sim_input.fog_processing_speed,
                                                        event_type='execution_completed_fog', data=event.data))
                     self.is_processing[event.data[0]] = True
+                    self.waiting_times[event.data[0]] -= event.data[1].size * simulation.sim_input.fog_processing_speed
                 else:
                     #add this task to this node's queue
                     self.exec_node_queues[event.data[0]].put_nowait(event.data[1])
@@ -427,6 +431,7 @@ class Network1CommandNodeCR(Network):
                     simulation.evlist.put_nowait(Event(time=event.time + event.data[1].size * simulation.sim_input.fog_processing_speed,
                                                        event_type='execution_completed_fog', data=event.data))
                     self.is_processing[event.data[0]] = True
+                    self.waiting_times[event.data[0]] -= event.data[1].size * simulation.sim_input.fog_processing_speed
                 else:
                     #add this task to this node's queue
                     self.exec_node_queues[event.data[0]].put_nowait(event.data[1])
