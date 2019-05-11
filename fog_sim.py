@@ -17,9 +17,9 @@ def main():
                                 cloud_processing_speed=1,
                                 avg_task_size=10,  # time taken to process a task (in ms): task_size * processing_speed
                                 stdev_task_size=3,
-                                avg_tasks_created_per_tick=-5,
-                                stdev_tasks_created_per_tick=3,
-                                avg_deadline_margin=100,
+                                avg_tasks_created_per_tick=-1,
+                                stdev_tasks_created_per_tick=3.5,
+                                avg_deadline_margin=150,
                                 stdev_deadline_margin=50,
                                 offloading_max_jumps=5)
     networkOffloading = NetworkFogOffloading(sim_input.num_fog_nodes, sim_input.offloading_max_jumps)
